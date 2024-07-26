@@ -1,9 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Simple To-Do With Export",
-  "version": "1.1",
-  "description": "A to-do list with editing, archiving, and CSV export functionality.",
-  "permissions": ["storage"],
+  "name": "To-Do List Extension",
+  "version": "1.0",
+  "description": "A to-do list extension with sync capabilities.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -16,5 +19,6 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  }
+  },
+  "options_page": "options.html"
 }

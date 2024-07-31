@@ -1,129 +1,112 @@
-document.addEventListener('DOMContentLoaded', function () {
-  const newTodoInput = document.getElementById('new-todo');
-  const addTodoButton = document.getElementById('add-todo');
-  const todoList = document.getElementById('todo-list');
-  const archiveView = document.getElementById('archive');
-  const mainView = document.getElementById('main');
-  const archivedList = document.getElementById('archived-list');
-  const exportTodoButton = document.getElementById('export-todo');
-  const viewArchivedButton = document.getElementById('view-archived');
-  const exportArchivedButton = document.getElementById('export-archived');
-  const backToMainButton = document.getElementById('back-to-main');
+const taskList = document.getElementById('task-list');
+const newTaskInput = document.getElementById('new-task-input');
+const addTaskBtn = document.getElementById('add-task-btn');
+const exportCsvBtn = document.getElementById('export-csv-btn');
 
-  addTodoButton.addEventListener('click', addTodo);
-  viewArchivedButton.addEventListener('click', () => {
-    mainView.style.display = 'none';
-    archiveView.style.display = 'block';
-    loadArchivedTodos();
-  });
-  backToMainButton.addEventListener('click', () => {
-    mainView.style.display = 'block';
-    archiveView.style.display = 'none';
-  });
-  exportTodoButton.addEventListener('click', exportActiveTasks);
-  exportArchivedButton.addEventListener('click', exportArchivedTasks);
+const icons = {
+    incomplete: 'icons/Incomplete.svg',
+    completed: 'icons/Completed.svg',
+    edit: 'icons/EditIcon.svg',
+    delete: 'icons/Delete.svg'
+};
 
-  function addTodo() {
-    const task = newTodoInput.value.trim();
-    if (task) {
-      const todo = { id: Date.now(), task, archived: false };
-      chrome.storage.local.get({ todos: [] }, function (result) {
-        const todos = result.todos;
-        todos.push(todo);
-        chrome.storage.local.set({ todos }, () => loadTodos(todos));
-      });
-      newTodoInput.value = '';
+let tasks = [];
+
+function loadTasks() {
+    chrome.storage.local.get(['tasks'], function(result) {
+        tasks = result.tasks || [];
+        renderTasks();
+    });
+}
+
+function saveTasks() {
+    chrome.storage.local.set({tasks: tasks});
+}
+
+function renderTasks() {
+    taskList.innerHTML = '';
+    tasks.forEach((task, index) => {
+        const taskItem = document.createElement('li');
+        taskItem.className = task.completed ? 'completed' : '';
+
+        const taskText = document.createElement('span');
+        taskText.textContent = task.text;
+        taskText.contentEditable = false;
+
+        const completeIcon = document.createElement('img');
+        completeIcon.src = task.completed ? icons.completed : icons.incomplete;
+        completeIcon.className = 'task-icon';
+        completeIcon.onclick = () => toggleTaskComplete(index);
+
+        const editIcon = document.createElement('img');
+        editIcon.src = icons.edit;
+        editIcon.className = 'task-icon';
+        editIcon.onclick = () => editTask(index, taskText);
+
+        const deleteIcon = document.createElement('img');
+        deleteIcon.src = icons.delete;
+        deleteIcon.className = 'task-icon';
+        deleteIcon.onclick = () => deleteTask(index);
+
+        taskItem.appendChild(completeIcon);
+        taskItem.appendChild(taskText);
+        taskItem.appendChild(editIcon);
+        taskItem.appendChild(deleteIcon);
+        taskList.appendChild(taskItem);
+    });
+}
+
+function addTask() {
+    const newTaskText = newTaskInput.value.trim();
+    if (newTaskText !== '') {
+        tasks.push({text: newTaskText, completed: false});
+        newTaskInput.value = '';
+        saveTasks();
+        renderTasks();
     }
-  }
+}
 
-  function loadTodos(todos) {
-    todoList.innerHTML = '';
-    todos.filter(todo => !todo.archived).forEach(todo => {
-      const li = document.createElement('li');
-      li.textContent = todo.task;
-      li.id = todo.id;
-      const archiveButton = document.createElement('button');
-      archiveButton.textContent = 'Archive';
-      archiveButton.addEventListener('click', () => archiveTask(todo.id));
-      li.appendChild(archiveButton);
-      todoList.appendChild(li);
+function toggleTaskComplete(index) {
+    tasks[index].completed = !tasks[index].completed;
+    saveTasks();
+    renderTasks();
+}
+
+function editTask(index, taskText) {
+    taskText.contentEditable = true;
+    taskText.focus();
+    taskText.onblur = () => {
+        tasks[index].text = taskText.textContent;
+        taskText.contentEditable = false;
+        saveTasks();
+    };
+}
+
+function deleteTask(index) {
+    if (confirm('Are you sure you want to delete this task?')) {
+        tasks.splice(index, 1);
+        saveTasks();
+        renderTasks();
+    }
+}
+
+function exportToCSV() {
+    const activeTasks = tasks.filter(task => !task.completed);
+    let csvContent = "data:text/csv;charset=utf-8,Active Tasks\n";
+    activeTasks.forEach(task => {
+        csvContent += `${task.text}\n`;
     });
-  }
 
-  function loadArchivedTodos() {
-    chrome.storage.local.get({ todos: [] }, function (result) {
-      archivedList.innerHTML = '';
-      result.todos.filter(todo => todo.archived).forEach(todo => {
-        const li = document.createElement('li');
-        li.textContent = todo.task;
-        li.id = todo.id;
-        const restoreButton = document.createElement('button');
-        restoreButton.textContent = 'Restore';
-        restoreButton.addEventListener('click', () => restoreTask(todo.id));
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.addEventListener('click', () => deleteTask(todo.id));
-        li.appendChild(restoreButton);
-        li.appendChild(deleteButton);
-        archivedList.appendChild(li);
-      });
-    });
-  }
-
-  function archiveTask(id) {
-    chrome.storage.local.get({ todos: [] }, function (result) {
-      const todos = result.todos.map(todo => {
-        if (todo.id === id) todo.archived = true;
-        return todo;
-      });
-      chrome.storage.local.set({ todos }, () => loadTodos(todos));
-    });
-  }
-
-  function restoreTask(id) {
-    chrome.storage.local.get({ todos: [] }, function (result) {
-      const todos = result.todos.map(todo => {
-        if (todo.id === id) todo.archived = false;
-        return todo;
-      });
-      chrome.storage.local.set({ todos }, () => loadArchivedTodos());
-    });
-  }
-
-  function deleteTask(id) {
-    chrome.storage.local.get({ todos: [] }, function (result) {
-      const todos = result.todos.filter(todo => todo.id !== id);
-      chrome.storage.local.set({ todos }, () => loadArchivedTodos());
-    });
-  }
-
-  function exportActiveTasks() {
-    chrome.storage.local.get({ todos: [] }, function (result) {
-      const tasks = result.todos.filter(todo => !todo.archived);
-      downloadCSV(tasks, 'active_tasks.csv');
-    });
-  }
-
-  function exportArchivedTasks() {
-    chrome.storage.local.get({ todos: [] }, function (result) {
-      const tasks = result.todos.filter(todo => todo.archived);
-      downloadCSV(tasks, 'archived_tasks.csv');
-    });
-  }
-
-  function downloadCSV(tasks, filename) {
-    const csvContent = 'data:text/csv;charset=utf-8,'
-      + tasks.map(e => e.task).join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', filename);
+    link.setAttribute('download', 'active_tasks.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }
+}
 
-  chrome.storage.local.get({ todos: [] }, function (result) {
-    loadTodos(result.todos);
-  });
-});
+addTaskBtn.onclick = addTask;
+exportCsvBtn.onclick = exportToCSV;
+
+document.addEventListener('DOMContentLoaded', loadTasks);

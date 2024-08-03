@@ -4,10 +4,10 @@ const addTaskBtn = document.getElementById('add-task-btn');
 const exportCsvBtn = document.getElementById('export-csv-btn');
 
 const icons = {
-    incomplete: 'icons/Incomplete.svg',
-    completed: 'icons/Completed.svg',
-    edit: 'icons/EditIcon.svg',
-    delete: 'icons/Delete.svg'
+    incomplete: 'Incomplete.svg',
+    completed: 'Completed.svg',
+    edit: 'EditIcon.svg',
+    delete: 'Delete.svg'
 };
 
 let tasks = [];

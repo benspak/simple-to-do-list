@@ -1,12 +1,11 @@
 {
   "manifest_version": 3,
   "name": "Simple To-Do",
-  "authors": "PopVia.com - Ben Spak, Emma Kalvelage",
-  "version": "1.3",
-  "change_log": "PopVia branding, bug fix.",
+  "version": "1.5",
   "description": "A to-do list extension to manage tasks by PopVia.com.",
   "permissions": [
-    "storage"
+    "storage",
+    "notifications"
   ],
   "action": {
     "default_popup": "popup.html"

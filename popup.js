@@ -1,5 +1,6 @@
 const taskList = document.getElementById('task-list');
 const newTaskInput = document.getElementById('new-task-input');
+const newTaskDueDateInput = document.getElementById('new-task-due-date');
 const addTaskBtn = document.getElementById('add-task-btn');
 const exportCsvBtn = document.getElementById('export-csv-btn');
 
@@ -16,6 +17,7 @@ function loadTasks() {
     chrome.storage.local.get(['tasks'], function(result) {
         tasks = result.tasks || [];
         renderTasks();
+        checkDueDates();
     });
 }
 
@@ -32,6 +34,10 @@ function renderTasks() {
         const taskText = document.createElement('span');
         taskText.textContent = task.text;
         taskText.contentEditable = false;
+
+        const dueDateText = document.createElement('span');
+        dueDateText.textContent = task.dueDate ? `Due: ${new Date(task.dueDate).toLocaleString()}` : '';
+        dueDateText.className = 'due-date';
 
         const completeIcon = document.createElement('img');
         completeIcon.src = task.completed ? icons.completed : icons.incomplete;
@@ -50,6 +56,7 @@ function renderTasks() {
 
         taskItem.appendChild(completeIcon);
         taskItem.appendChild(taskText);
+        taskItem.appendChild(dueDateText);
         taskItem.appendChild(editIcon);
         taskItem.appendChild(deleteIcon);
         taskList.appendChild(taskItem);
@@ -58,9 +65,11 @@ function renderTasks() {
 
 function addTask() {
     const newTaskText = newTaskInput.value.trim();
+    const newTaskDueDate = newTaskDueDateInput.value;
     if (newTaskText !== '') {
-        tasks.push({text: newTaskText, completed: false});
+        tasks.push({text: newTaskText, dueDate: newTaskDueDate, completed: false});
         newTaskInput.value = '';
+        newTaskDueDateInput.value = '';
         saveTasks();
         renderTasks();
     }
@@ -91,9 +100,9 @@ function deleteTask(index) {
 }
 
 function exportToCSV() {
-    let csvContent = "data:text/csv;charset=utf-8,Task,Completed\n";
+    let csvContent = "data:text/csv;charset=utf-8,Task,Due Date,Completed\n";
     tasks.forEach(task => {
-        csvContent += `"${task.text.replace(/"/g, '""')}",${task.completed ? 'Yes' : 'No'}\n`;
+        csvContent += `"${task.text.replace(/"/g, '""')}",${task.dueDate ? task.dueDate : ''},${task.completed ? 'Yes' : 'No'}\n`;
     });
 
     const encodedUri = encodeURI(csvContent);
@@ -103,6 +112,30 @@ function exportToCSV() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+function checkDueDates() {
+    const now = new Date().toISOString();
+    tasks.forEach(task => {
+        if (task.dueDate && task.dueDate < now && !task.notified) {
+            notifyUser(task.text);
+            task.notified = true;
+            saveTasks();
+        }
+    });
+}
+
+function notifyUser(taskText) {
+    if (chrome.notifications) {
+        chrome.notifications.create('', {
+            title: 'Task Due',
+            message: `The task "${taskText}" is now due!`,
+            iconUrl: 'icon48.png',
+            type: 'basic'
+        }, function(notificationId) {});
+    } else {
+        console.error('Notifications API not available.');
+    }
 }
 
 addTaskBtn.onclick = addTask;

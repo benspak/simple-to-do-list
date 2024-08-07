@@ -39,3 +39,18 @@ Help me create a node/express REST server that receives to-do items and persists
 }
 
 Help me host this node.js server and mongo DB server on NameCheap's shared hosting.
+
+### Extended 08-6-24
+
+Help extend this Chrome browser plugin.
+
+Design Choice: Completed items are not exported. Let’s export all items and denote if they are completed or not.
+
+Bug: If a user exports to CSV an item that uses a comma, the comma will make additional cells.
+
+Feature Addition: Pressing Command Enter to complete a text entry
+
+### Extended 08-07-24
+Help me extend the Google Chrome browser extension.
+
+Add due dates on each task. Allow users the choose when a task is due date and time. Notify users when the task due date and time have passed. 

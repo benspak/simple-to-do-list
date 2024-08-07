@@ -69,3 +69,9 @@ button:hover {
 a {
   color: #5941A9;
 }
+
+#new-task-due-date {
+    width: calc(80% - 22px);
+    padding: 5px;
+    margin-bottom: 10px;
+}

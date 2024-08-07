@@ -91,16 +91,15 @@ function deleteTask(index) {
 }
 
 function exportToCSV() {
-    const activeTasks = tasks.filter(task => !task.completed);
-    let csvContent = "data:text/csv;charset=utf-8,Active Tasks\n";
-    activeTasks.forEach(task => {
-        csvContent += `${task.text}\n`;
+    let csvContent = "data:text/csv;charset=utf-8,Task,Completed\n";
+    tasks.forEach(task => {
+        csvContent += `"${task.text.replace(/"/g, '""')}",${task.completed ? 'Yes' : 'No'}\n`;
     });
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'active_tasks.csv');
+    link.setAttribute('download', 'tasks.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -110,3 +109,8 @@ addTaskBtn.onclick = addTask;
 exportCsvBtn.onclick = exportToCSV;
 
 document.addEventListener('DOMContentLoaded', loadTasks);
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+        addTask();
+    }
+});

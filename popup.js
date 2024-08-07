@@ -31,13 +31,14 @@ function renderTasks() {
         const taskItem = document.createElement('li');
         taskItem.className = task.completed ? 'completed' : '';
 
-        const taskText = document.createElement('span');
-        taskText.textContent = task.text;
-        taskText.contentEditable = false;
-
         const dueDateText = document.createElement('span');
         dueDateText.textContent = task.dueDate ? `Due: ${new Date(task.dueDate).toLocaleString()}` : '';
         dueDateText.className = 'due-date';
+
+        const taskText = document.createElement('span');
+        taskText.textContent = task.text;
+        taskText.className = 'task-text';
+        taskText.contentEditable = false;
 
         const completeIcon = document.createElement('img');
         completeIcon.src = task.completed ? icons.completed : icons.incomplete;
@@ -55,8 +56,8 @@ function renderTasks() {
         deleteIcon.onclick = () => deleteTask(index);
 
         taskItem.appendChild(completeIcon);
-        taskItem.appendChild(taskText);
         taskItem.appendChild(dueDateText);
+        taskItem.appendChild(taskText);
         taskItem.appendChild(editIcon);
         taskItem.appendChild(deleteIcon);
         taskList.appendChild(taskItem);

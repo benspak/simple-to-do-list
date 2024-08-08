@@ -32,7 +32,7 @@ function renderTasks() {
         taskItem.className = task.completed ? 'completed' : '';
 
         const dueDateText = document.createElement('span');
-        dueDateText.textContent = task.dueDate ? `Due: ${new Date(task.dueDate).toLocaleString()}` : '';
+        dueDateText.textContent = task.dueDate ? `Due: ${new Date(task.dueDate).toLocaleDateString()}` : '';
         dueDateText.className = 'due-date';
 
         const taskText = document.createElement('span');
